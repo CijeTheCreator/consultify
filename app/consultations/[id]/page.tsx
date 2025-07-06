@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase"
 import type { AuthUser } from "@/lib/auth"
 import ConsultationChat from "@/components/consultation-chat"
 import AITriageChat from "@/components/ai-triage-chat"
+import Navbar from "@/components/navbar"
+import { signOut, getUserDisplayInfo } from "@/lib/auth"
 
 export default function ConsultationPage() {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null)
@@ -62,30 +64,41 @@ export default function ConsultationPage() {
     router.push("/consultations")
   }
 
+  const handleSignOut = async () => {
+    await signOut()
+    router.push("/")
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading consultation...</p>
+      <>
+        {currentUser && <Navbar user={getUserDisplayInfo(currentUser)} onSignOut={handleSignOut} />}
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading consultation...</p>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
   if (!currentUser || !consultation) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Consultation not found</h2>
-          <p className="text-gray-600 mb-4">
-            The consultation you're looking for doesn't exist or you don't have access to it.
-          </p>
-          <button onClick={() => router.push("/consultations")} className="text-blue-600 hover:text-blue-800">
-            Back to consultations
-          </button>
+      <>
+        {currentUser && <Navbar user={getUserDisplayInfo(currentUser)} onSignOut={handleSignOut} />}
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-16">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Consultation not found</h2>
+            <p className="text-gray-600 mb-4">
+              The consultation you're looking for doesn't exist or you don't have access to it.
+            </p>
+            <button onClick={() => router.push("/consultations")} className="text-blue-600 hover:text-blue-800">
+              Back to consultations
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
@@ -101,22 +114,32 @@ export default function ConsultationPage() {
   // Show AI triage chat if consultation is still in AI triage mode
   if (consultation.consultationType === "AI_TRIAGE" && consultation.aiTriageStatus !== "COMPLETED") {
     return (
-      <AITriageChat
-        currentUser={user}
-        consultationId={consultationId}
-        onTriageComplete={handleTriageComplete}
-        onBack={handleBack}
-      />
+      <>
+        <Navbar user={user} onSignOut={handleSignOut} />
+        <div className="pt-16">
+          <AITriageChat
+            currentUser={user}
+            consultationId={consultationId}
+            onTriageComplete={handleTriageComplete}
+            onBack={handleBack}
+          />
+        </div>
+      </>
     )
   }
 
   // Show regular consultation chat
   return (
-    <ConsultationChat
-      consultationId={consultationId}
-      currentUser={user}
-      onBack={handleBack}
-      fromAITriage={consultation.consultationType === "HUMAN" && consultation.triageSummary}
-    />
+    <>
+      <Navbar user={user} onSignOut={handleSignOut} />
+      <div className="pt-16">
+        <ConsultationChat
+          consultationId={consultationId}
+          currentUser={user}
+          onBack={handleBack}
+          fromAITriage={consultation.consultationType === "HUMAN" && consultation.triageSummary}
+        />
+      </div>
+    </>
   )
 }
