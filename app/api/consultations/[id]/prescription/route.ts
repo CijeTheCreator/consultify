@@ -6,11 +6,30 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   const consultationId = params.id
 
   try {
-    const { doctorId, patientId, medications } = await request.json()
+    const { medications } = await request.json()
 
-    if (!doctorId || !patientId || !medications || !Array.isArray(medications)) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    if (!medications || !Array.isArray(medications)) {
+      return NextResponse.json({ error: "Missing required medications field" }, { status: 400 })
     }
+
+    // Get consultation to fetch doctorId and patientId
+    const consultation = await prisma.consultation.findUnique({
+      where: { id: consultationId },
+      select: {
+        doctorId: true,
+        patientId: true,
+      },
+    })
+
+    if (!consultation) {
+      return NextResponse.json({ error: "Consultation not found" }, { status: 404 })
+    }
+
+    if (!consultation.doctorId) {
+      return NextResponse.json({ error: "No doctor assigned to this consultation" }, { status: 400 })
+    }
+
+    const { doctorId, patientId } = consultation
 
     // Validate medications
     const validMedications = medications.filter(
@@ -40,10 +59,6 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         messageType: "PRESCRIPTION",
         prescriptionId: prescription.id,
       },
-      // Remove sender relation
-      // include: {
-      //   sender: true,
-      // },
     })
 
     // Get doctor data from Supabase Auth

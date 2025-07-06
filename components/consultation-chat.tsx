@@ -248,7 +248,7 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
         <CardContent className="flex-1 overflow-y-auto space-y-4 p-4">
           {messages.map((message) => (
             <div key={message.id} className={`flex ${isCurrentUserMessage(message) ? "justify-end" : "justify-start"}`}>
-              {message.messageType === "prescription" ? (
+              {message.messageType === "PRESCRIPTION" ? (
                 <div className="w-full max-w-md">
                   <PrescriptionCard
                     medications={message.prescription_data?.medications || []}
