@@ -9,7 +9,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ArrowLeft, Check, CheckCheck, Send, Pill } from "lucide-react"
-import type { User, Message } from "@/lib/supabase"
+import type { User } from "@/lib/types"
 import PrescriptionModal from "./prescription-modal"
 import PrescriptionCard from "./prescription-card"
 
@@ -21,11 +21,11 @@ interface ConsultationChatProps {
 }
 
 export default function ConsultationChat({ consultationId, currentUser, onBack, fromAITriage }: ConsultationChatProps) {
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState("")
   const [typingUsers, setTypingUsers] = useState<string[]>([])
   const [isTyping, setIsTyping] = useState(false)
-  const [otherParticipant, setOtherParticipant] = useState<User | null>(null)
+  const [otherParticipant, setOtherParticipant] = useState<any>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout>()
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false)
@@ -38,16 +38,15 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
       setMessages(data.messages || [])
       setTypingUsers(data.typingUsers || [])
 
-      // Set other participant from first message
+      // Set other participant from first message that's not from current user
       if (data.messages?.length > 0 && !otherParticipant) {
-        const firstMessage = data.messages[0]
-        if (firstMessage.sender?.id !== currentUser.id) {
-          setOtherParticipant(firstMessage.sender)
-        } else if (data.messages.length > 1) {
-          const secondMessage = data.messages.find((m: Message) => m.sender?.id !== currentUser.id)
-          if (secondMessage?.sender) {
-            setOtherParticipant(secondMessage.sender)
-          }
+        const otherUserMessage = data.messages.find((m: any) => m.senderId !== currentUser.id)
+        if (otherUserMessage?.senderName) {
+          setOtherParticipant({
+            id: otherUserMessage.senderId,
+            name: otherUserMessage.senderName,
+            specialization: "", // Could be enhanced to fetch this
+          })
         }
       }
     } catch (error) {
@@ -173,7 +172,7 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
   // Mark messages as read when they come into view
   useEffect(() => {
     messages.forEach((message) => {
-      if (message.sender_id !== currentUser.id && !message.read_by?.includes(currentUser.id)) {
+      if (message.senderId !== currentUser.id && !message.read_by?.includes(currentUser.id)) {
         markAsRead(message.id)
       }
     })
@@ -190,14 +189,27 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
     scrollToBottom()
   }, [messages, typingUsers])
 
-  const getReadReceiptIcon = (message: Message) => {
-    if (message.sender_id !== currentUser.id) return null
+  const getReadReceiptIcon = (message: any) => {
+    if (message.senderId !== currentUser.id) return null
 
-    const readByOthers = message.read_by?.filter((userId) => userId !== currentUser.id) || []
+    const readByOthers = message.read_by?.filter((userId: string) => userId !== currentUser.id) || []
     if (readByOthers.length > 0) {
       return <CheckCheck className="w-4 h-4 text-blue-500" />
     }
     return <Check className="w-4 h-4 text-gray-400" />
+  }
+
+  // Helper function to determine if message is from current user
+  const isCurrentUserMessage = (message: any) => {
+    return message.senderId === currentUser.id
+  }
+
+  // Helper function to get sender name for display
+  const getSenderName = (message: any) => {
+    if (message.senderId === currentUser.id) {
+      return currentUser.name
+    }
+    return message.senderName || otherParticipant?.name || "Other User"
   }
 
   return (
@@ -210,7 +222,9 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
                 <ArrowLeft className="w-4 h-4" />
               </Button>
               <Avatar className="w-10 h-10">
-                <AvatarFallback>{otherParticipant?.name?.charAt(0).toUpperCase() || "?"}</AvatarFallback>
+                <AvatarFallback>
+                  {otherParticipant?.name?.charAt(0).toUpperCase() || (currentUser.role === "patient" ? "Dr" : "P")}
+                </AvatarFallback>
               </Avatar>
               <div>
                 <CardTitle className="text-lg">
@@ -233,38 +247,35 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
 
         <CardContent className="flex-1 overflow-y-auto space-y-4 p-4">
           {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.sender_id === currentUser.id ? "justify-end" : "justify-start"}`}
-            >
-              {message.message_type === "prescription" ? (
+            <div key={message.id} className={`flex ${isCurrentUserMessage(message) ? "justify-end" : "justify-start"}`}>
+              {message.messageType === "prescription" ? (
                 <div className="w-full max-w-md">
                   <PrescriptionCard
                     medications={message.prescription_data?.medications || []}
-                    doctorName={message.sender?.name || "Doctor"}
-                    patientName={otherParticipant?.name || "Patient"}
-                    timestamp={message.created_at}
+                    doctorName={getSenderName(message)}
+                    patientName={isCurrentUserMessage(message) ? otherParticipant?.name || "Patient" : currentUser.name}
+                    timestamp={message.createdAt}
                   />
                 </div>
               ) : (
                 <div
-                  className={`flex items-end space-x-2 max-w-xs lg:max-w-md ${message.sender_id === currentUser.id ? "flex-row-reverse space-x-reverse" : ""}`}
+                  className={`flex items-end space-x-2 max-w-xs lg:max-w-md ${isCurrentUserMessage(message) ? "flex-row-reverse space-x-reverse" : ""
+                    }`}
                 >
                   <Avatar className="w-8 h-8">
                     <AvatarFallback className="text-xs">
-                      {message.sender?.name?.charAt(0).toUpperCase() || "?"}
+                      {getSenderName(message).charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
 
                   <div
-                    className={`rounded-lg px-3 py-2 ${
-                      message.sender_id === currentUser.id ? "bg-blue-500 text-white" : "bg-white border text-gray-900"
-                    }`}
+                    className={`rounded-lg px-3 py-2 ${isCurrentUserMessage(message) ? "bg-blue-500 text-white" : "bg-white border text-gray-900"
+                      }`}
                   >
                     <p className="text-sm">{message.content}</p>
                     <div className="flex items-center justify-between mt-1">
                       <span className="text-xs opacity-70">
-                        {new Date(message.created_at).toLocaleTimeString([], {
+                        {new Date(message.createdAt).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}

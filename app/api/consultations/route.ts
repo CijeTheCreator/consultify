@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/lib/supabase-server"
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)

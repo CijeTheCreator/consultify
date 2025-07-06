@@ -1,4 +1,4 @@
-import { supabase } from "./supabase"
+import { supabase } from "./supabase-server"
 
 export interface DoctorSelectionCriteria {
   symptoms: string
