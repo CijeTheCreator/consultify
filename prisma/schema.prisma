@@ -3,23 +3,22 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Consultation {
-  id                String             @id @default(cuid())
-  patientId         String             @map("patient_id")
-  doctorId          String?            @map("doctor_id")
-  title             String
-  status            ConsultationStatus @default(ACTIVE)
-  consultationType  ConsultationType   @default(HUMAN) @map("consultation_type")
-  aiTriageStatus    AITriageStatus     @default(IN_PROGRESS) @map("ai_triage_status")
-  triageSummary     String?            @map("triage_summary")
-  urgency           Urgency            @default(MEDIUM)
-  createdAt         DateTime           @default(now()) @map("created_at")
-  updatedAt         DateTime           @updatedAt @map("updated_at")
+  id               String             @id @default(cuid())
+  patientId        String             @map("patient_id")
+  doctorId         String?            @map("doctor_id")
+  title            String
+  status           ConsultationStatus @default(ACTIVE)
+  consultationType ConsultationType   @default(HUMAN) @map("consultation_type")
+  aiTriageStatus   AITriageStatus     @default(IN_PROGRESS) @map("ai_triage_status")
+  triageSummary    String?            @map("triage_summary")
+  urgency          Urgency            @default(MEDIUM)
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
 
   // Relations
   messages         Message[]
@@ -39,9 +38,10 @@ model Message {
   createdAt      DateTime    @default(now()) @map("created_at")
 
   // Relations
-  consultation Consultation  @relation(fields: [consultationId], references: [id], onDelete: Cascade)
-  prescription Prescription? @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  consultation Consultation         @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  prescription Prescription?        @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
   reads        MessageRead[]
+  translations MessageTranslation[] // Add this line
 
   @@map("messages")
 }
@@ -73,12 +73,12 @@ model TypingIndicator {
 }
 
 model Prescription {
-  id             String       @id @default(cuid())
-  consultationId String       @map("consultation_id")
-  doctorId       String       @map("doctor_id")
-  patientId      String       @map("patient_id")
+  id             String   @id @default(cuid())
+  consultationId String   @map("consultation_id")
+  doctorId       String   @map("doctor_id")
+  patientId      String   @map("patient_id")
   medications    Json // Array of {drug_name, amount, frequency}
-  createdAt      DateTime     @default(now()) @map("created_at")
+  createdAt      DateTime @default(now()) @map("created_at")
 
   // Relations
   consultation Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
@@ -128,4 +128,20 @@ enum MessageType {
   PRESCRIPTION
 
   @@map("message_type")
+}
+
+model MessageTranslation {
+  id             String   @id @default(cuid())
+  messageId      String   @map("message_id")
+  originalText   String   @map("original_text")
+  translatedText String   @map("translated_text")
+  sourceLanguage String   @map("source_language")
+  targetLanguage String   @map("target_language")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, targetLanguage])
+  @@map("message_translations")
 }

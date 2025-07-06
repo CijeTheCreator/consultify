@@ -1,14 +1,23 @@
+// app/api/consultations/[id]/messages/route.ts
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { supabase } from "@/lib/supabase-server"
+import { translateMessage, getLanguageFromUserId } from "@/lib/translation"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   const consultationId = params.id
   const { searchParams } = new URL(request.url)
   const userId = searchParams.get("userId")
 
+  if (!userId) {
+    return NextResponse.json({ error: "userId is required" }, { status: 400 })
+  }
+
   try {
-    // Get messages with prescription data only (no sender relation)
+    // Get user's preferred language
+    const userLanguage = await getLanguageFromUserId(userId)
+
+    // Get messages with prescription data
     const messages = await prisma.message.findMany({
       where: { consultationId },
       include: {
@@ -16,13 +25,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         reads: {
           select: { userId: true },
         },
-        // Remove sender relation since it doesn't exist
-        // sender: true,
       },
       orderBy: { createdAt: "asc" },
     })
 
-    // Get typing indicators without user relation
+    // Get typing indicators
     const typingIndicators = await prisma.typingIndicator.findMany({
       where: {
         consultationId,
@@ -30,21 +37,28 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
           gte: new Date(Date.now() - 3000), // Last 3 seconds
         },
         userId: {
-          not: userId || undefined,
+          not: userId,
         },
       },
-      // Remove user relation
-      // include: {
-      //   user: {
-      //     select: { name: true },
-      //   },
-      // },
     })
 
-    // Enrich messages with user data from Supabase Auth
+    // Get all unique sender IDs to fetch their languages
+    const senderIds = [...new Set(messages.map(msg => msg.senderId))]
+    const senderLanguages = new Map<string, string>()
+
+    await Promise.all(
+      senderIds.map(async (senderId) => {
+        const language = await getLanguageFromUserId(senderId)
+        senderLanguages.set(senderId, language)
+      })
+    )
+
+    // Enrich messages with user data and translations
     const enrichedMessages = await Promise.all(
       messages.map(async (message) => {
         let senderName = "Unknown User"
+        const senderLanguage = senderLanguages.get(message.senderId) || "en"
+
         try {
           const { data: senderData } = await supabase.auth.admin.getUserById(message.senderId)
           if (senderData.user) {
@@ -54,9 +68,23 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
           console.error("Failed to fetch sender data:", error)
         }
 
+        // Translate message content if needed
+        let translatedContent = message.content
+        if (message.messageType !== "SYSTEM" && message.messageType !== "DOCTOR_INTRO") {
+          translatedContent = await translateMessage({
+            messageId: message.id,
+            text: message.content,
+            sourceLanguage: senderLanguage,
+            targetLanguage: userLanguage,
+          })
+        }
+
         return {
           ...message,
+          content: translatedContent,
+          originalContent: message.content,
           senderName,
+          senderLanguage,
           read_by: message.reads.map((r) => r.userId),
           prescription_data: message.prescription
             ? {
@@ -83,6 +111,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     return NextResponse.json({
       messages: enrichedMessages,
       typingUsers: typingUserNames.filter(Boolean),
+      userLanguage,
     })
   } catch (error) {
     console.error("Database error:", error)
@@ -132,10 +161,6 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
           senderId,
           content,
         },
-        // Remove sender relation
-        // include: {
-        //   sender: true,
-        // },
       })
 
       // Mark as read by sender
@@ -148,10 +173,13 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
       // Get sender data from Supabase Auth
       let senderName = "Unknown User"
+      let senderLanguage = "en"
+
       try {
         const { data: senderData } = await supabase.auth.admin.getUserById(senderId)
         if (senderData.user) {
           senderName = senderData.user.user_metadata?.name || "Unknown User"
+          senderLanguage = senderData.user.user_metadata?.language || "en"
         }
       } catch (error) {
         console.error("Failed to fetch sender data:", error)
@@ -161,6 +189,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         message: {
           ...message,
           senderName,
+          senderLanguage,
+          originalContent: content,
         },
       })
     }

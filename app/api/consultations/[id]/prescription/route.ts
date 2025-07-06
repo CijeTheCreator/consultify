@@ -1,6 +1,8 @@
+// app/api/consultations/[id]/prescription/route.ts
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { supabase } from "@/lib/supabase-server"
+import { translateMessage, getLanguageFromUserId } from "@/lib/translation"
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const consultationId = params.id
@@ -31,6 +33,10 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     const { doctorId, patientId } = consultation
 
+    // Get doctor and patient languages
+    const doctorLanguage = await getLanguageFromUserId(doctorId)
+    const patientLanguage = await getLanguageFromUserId(patientId)
+
     // Validate medications
     const validMedications = medications.filter(
       (med) => med.drug_name?.trim() && med.amount?.trim() && med.frequency?.trim(),
@@ -50,12 +56,15 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       },
     })
 
+    // Create prescription message content
+    const prescriptionContent = `Prescription sent with ${validMedications.length} medication${validMedications.length > 1 ? "s" : ""}`
+
     // Create prescription message
     const message = await prisma.message.create({
       data: {
         consultationId,
         senderId: doctorId,
-        content: `Prescription sent with ${validMedications.length} medication${validMedications.length > 1 ? "s" : ""}`,
+        content: prescriptionContent,
         messageType: "PRESCRIPTION",
         prescriptionId: prescription.id,
       },
@@ -85,9 +94,44 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       console.error("Failed to fetch patient data:", error)
     }
 
-    // Send prescription email to patient (fire and forget - don't block response)
+    // Translate medications for email if needed
+    let translatedMedications = validMedications
+    if (doctorLanguage !== patientLanguage) {
+      translatedMedications = await Promise.all(
+        validMedications.map(async (med) => {
+          const translatedDrugName = await translateMessage({
+            messageId: `med-${prescription.id}-${med.drug_name}`,
+            text: med.drug_name,
+            sourceLanguage: doctorLanguage,
+            targetLanguage: patientLanguage,
+          })
+
+          const translatedAmount = await translateMessage({
+            messageId: `amount-${prescription.id}-${med.amount}`,
+            text: med.amount,
+            sourceLanguage: doctorLanguage,
+            targetLanguage: patientLanguage,
+          })
+
+          const translatedFrequency = await translateMessage({
+            messageId: `freq-${prescription.id}-${med.frequency}`,
+            text: med.frequency,
+            sourceLanguage: doctorLanguage,
+            targetLanguage: patientLanguage,
+          })
+
+          return {
+            ...med,
+            drug_name: translatedDrugName,
+            amount: translatedAmount,
+            frequency: translatedFrequency,
+          }
+        })
+      )
+    }
+
+    // Send prescription email to patient (fire and forget)
     if (patientEmail) {
-      // Use setImmediate or setTimeout to ensure this runs after the response is sent
       setImmediate(async () => {
         try {
           const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/send-prescription`, {
@@ -97,7 +141,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
             },
             body: JSON.stringify({
               email: patientEmail,
-              medications: validMedications,
+              medications: translatedMedications,
               doctorName,
               patientName,
               timestamp: new Date().toISOString(),
@@ -122,6 +166,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       message: {
         ...message,
         senderName: doctorName,
+        senderLanguage: doctorLanguage,
+        originalContent: prescriptionContent,
         prescription_data: {
           medications: validMedications,
         },

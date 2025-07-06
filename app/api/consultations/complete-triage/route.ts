@@ -1,8 +1,10 @@
+// app/api/consultations/complete-triage/route.ts
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { selectDoctor, extractSymptoms } from "@/lib/doctor-selection"
 import { ConsultationType, AITriageStatus } from "@prisma/client"
 import { supabase } from "@/lib/supabase-server"
+import { translateMessage, getLanguageFromUserId } from "@/lib/translation"
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,9 +23,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Consultation not found" }, { status: 404 })
     }
 
+    // Get patient language
+    const patientLanguage = await getLanguageFromUserId(consultation.patientId)
+
     // Extract symptoms and select doctor
     const criteria = extractSymptoms(aiSummary)
     const selectedDoctor = await selectDoctor(criteria)
+
+    // Get doctor language
+    const doctorLanguage = await getLanguageFromUserId(selectedDoctor.id)
 
     // Update consultation with doctor and change type
     const updatedConsultation = await prisma.consultation.update({
@@ -61,15 +69,29 @@ export async function POST(request: NextRequest) {
       console.error("Failed to fetch doctor data:", error)
     }
 
-    // Add doctor introduction message
-    await prisma.message.create({
+    // Create doctor introduction message
+    const doctorIntroContent = `Hello! I'm Dr. ${doctorName}. I've reviewed your symptoms and I'm here to help. How are you feeling right now?`
+
+    // Create the message first
+    const doctorIntroMessage = await prisma.message.create({
       data: {
         consultationId,
         senderId: selectedDoctor.id,
-        content: `Hello! I'm Dr. ${doctorName}. I've reviewed your symptoms and I'm here to help. How are you feeling right now?`,
+        content: doctorIntroContent,
         messageType: "DOCTOR_INTRO",
       },
     })
+
+    // Translate doctor introduction for patient if needed
+    let translatedIntroContent = doctorIntroContent
+    if (doctorLanguage !== patientLanguage) {
+      translatedIntroContent = await translateMessage({
+        messageId: doctorIntroMessage.id,
+        text: doctorIntroContent,
+        sourceLanguage: doctorLanguage,
+        targetLanguage: patientLanguage,
+      })
+    }
 
     // Get patient data from Supabase Auth
     let patientName = "Patient"
@@ -93,6 +115,14 @@ export async function POST(request: NextRequest) {
         id: selectedDoctor.id,
         name: doctorName,
         specialization: doctorSpecialization,
+        language: doctorLanguage,
+      },
+      introMessage: {
+        ...doctorIntroMessage,
+        content: translatedIntroContent,
+        originalContent: doctorIntroContent,
+        senderName: doctorName,
+        senderLanguage: doctorLanguage,
       },
     })
   } catch (error) {
