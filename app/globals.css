@@ -1,0 +1,119 @@
+@import url("https://fonts.googleapis.com/css2?family=Proxima+Nova:wght@300;400;500;600;700;800;900&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 142 76% 15%; /* #0A400C */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 142 76% 15%; /* #0A400C */
+    --radius: 0.5rem;
+
+    /* Custom color variables */
+    --forest-green: 142 76% 15%; /* #0A400C */
+    --sage-green: 82 19% 47%; /* #819067 */
+    --olive-green: 52 22% 62%; /* #B1AB86 */
+    --cream: 60 67% 94%; /* #FEFAE0 */
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Proxima Nova", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+}
+
+/* Custom utility classes for our color palette */
+@layer utilities {
+  .bg-forest-green {
+    background-color: #0a400c;
+  }
+  .bg-sage-green {
+    background-color: #819067;
+  }
+  .bg-olive-green {
+    background-color: #b1ab86;
+  }
+  .bg-cream {
+    background-color: #fefae0;
+  }
+
+  .text-forest-green {
+    color: #0a400c;
+  }
+  .text-sage-green {
+    color: #819067;
+  }
+  .text-olive-green {
+    color: #b1ab86;
+  }
+  .text-cream {
+    color: #fefae0;
+  }
+
+  .border-forest-green {
+    border-color: #0a400c;
+  }
+  .border-sage-green {
+    border-color: #819067;
+  }
+  .border-olive-green {
+    border-color: #b1ab86;
+  }
+  .border-cream {
+    border-color: #fefae0;
+  }
+
+  .hover\:bg-forest-green:hover {
+    background-color: #0a400c;
+  }
+  .hover\:bg-sage-green:hover {
+    background-color: #819067;
+  }
+  .hover\:bg-olive-green:hover {
+    background-color: #b1ab86;
+  }
+}
