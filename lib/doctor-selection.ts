@@ -1,5 +1,4 @@
-import { prisma } from "./prisma"
-import { Role } from "@prisma/client"
+import { supabase } from "./supabase"
 
 export interface DoctorSelectionCriteria {
   symptoms: string
@@ -9,10 +8,9 @@ export interface DoctorSelectionCriteria {
 
 export async function selectDoctor(criteria: DoctorSelectionCriteria) {
   try {
-    // Get all available doctors
-    const doctors = await prisma.user.findMany({
-      where: { role: Role.DOCTOR },
-    })
+    // Get all doctors from Supabase Auth
+    const { data: users } = await supabase.auth.admin.listUsers()
+    const doctors = users.users.filter((user) => user.user_metadata?.role === "doctor")
 
     if (doctors.length === 0) {
       throw new Error("No doctors available")

@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     // Get consultation details
     const consultation = await prisma.consultation.findUnique({
       where: { id: consultationId },
-      include: { patient: true },
+      // include: { patient: true },
     })
 
     if (!consultation) {
@@ -36,10 +36,11 @@ export async function POST(request: NextRequest) {
         triageSummary: aiSummary,
         urgency: criteria.urgency.toUpperCase() as any,
       },
-      include: {
-        patient: true,
-        doctor: true,
-      },
+      // Remove user relations since they don't exist
+      // include: {
+      //   patient: true,
+      //   doctor: true,
+      // },
     })
 
     // Add triage summary as system message
@@ -62,9 +63,22 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Get user data from Supabase Auth instead
+    const { data: patientData } = await supabase.auth.admin.getUserById(consultation.patientId)
+    const patientName = patientData.user?.user_metadata?.name || "Patient"
+
     return NextResponse.json({
-      consultation: updatedConsultation,
-      doctor: selectedDoctor,
+      consultation: {
+        ...updatedConsultation,
+        patientName,
+        doctorName: selectedDoctor.user_metadata?.name || "Doctor",
+        doctorSpecialization: selectedDoctor.user_metadata?.specialization || "",
+      },
+      doctor: {
+        id: selectedDoctor.id,
+        name: selectedDoctor.user_metadata?.name || "Doctor",
+        specialization: selectedDoctor.user_metadata?.specialization || "",
+      },
     })
   } catch (error) {
     console.error("Database error:", error)

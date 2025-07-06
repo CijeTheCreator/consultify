@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@ai-sdk/mistral':
-        specifier: latest
+        specifier: ^1.2.8
         version: 1.2.8(zod@3.25.74)
       '@emotion/is-prop-valid':
         specifier: latest
@@ -18,7 +18,7 @@ importers:
         specifier: ^3.9.1
         version: 3.10.0(react-hook-form@7.60.0(react@18.3.1))
       '@prisma/client':
-        specifier: latest
+        specifier: ^6.11.1
         version: 6.11.1(prisma@6.11.1(typescript@5.8.3))(typescript@5.8.3)
       '@radix-ui/react-accordion':
         specifier: 1.2.2
@@ -42,7 +42,7 @@ importers:
         specifier: 2.2.4
         version: 2.2.4(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-dialog':
-        specifier: latest
+        specifier: ^1.1.14
         version: 1.1.14(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-dropdown-menu':
         specifier: 2.1.4
@@ -51,7 +51,7 @@ importers:
         specifier: 1.1.4
         version: 1.1.4(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-label':
-        specifier: latest
+        specifier: ^2.1.7
         version: 2.1.7(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-menubar':
         specifier: 1.1.4
@@ -102,10 +102,10 @@ importers:
         specifier: 1.1.6
         version: 1.1.6(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@supabase/supabase-js':
-        specifier: latest
+        specifier: ^2.50.3
         version: 2.50.3
       ai:
-        specifier: latest
+        specifier: ^4.3.16
         version: 4.3.16(react@18.3.1)(zod@3.25.74)
       autoprefixer:
         specifier: ^10.4.20
@@ -126,7 +126,7 @@ importers:
         specifier: 8.5.1
         version: 8.5.1(react@18.3.1)
       framer-motion:
-        specifier: latest
+        specifier: ^12.23.0
         version: 12.23.0(@emotion/is-prop-valid@1.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       input-otp:
         specifier: 1.4.1

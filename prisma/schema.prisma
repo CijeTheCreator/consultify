@@ -1,27 +1,25 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Consultation {
-  id               String             @id @default(cuid())
-  patientId        String             @map("patient_id")
-  doctorId         String?            @map("doctor_id")
-  title            String
-  status           ConsultationStatus @default(ACTIVE)
-  consultationType ConsultationType   @default(HUMAN) @map("consultation_type")
-  aiTriageStatus   AITriageStatus     @default(IN_PROGRESS) @map("ai_triage_status")
-  triageSummary    String?            @map("triage_summary")
-  urgency          Urgency            @default(MEDIUM)
-  createdAt        DateTime           @default(now()) @map("created_at")
-  updatedAt        DateTime           @updatedAt @map("updated_at")
+  id                String             @id @default(cuid())
+  patientId         String             @map("patient_id")
+  doctorId          String?            @map("doctor_id")
+  title             String
+  status            ConsultationStatus @default(ACTIVE)
+  consultationType  ConsultationType   @default(HUMAN) @map("consultation_type")
+  aiTriageStatus    AITriageStatus     @default(IN_PROGRESS) @map("ai_triage_status")
+  triageSummary     String?            @map("triage_summary")
+  urgency           Urgency            @default(MEDIUM)
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
 
   // Relations
   messages         Message[]
@@ -75,12 +73,12 @@ model TypingIndicator {
 }
 
 model Prescription {
-  id             String   @id @default(cuid())
-  consultationId String   @map("consultation_id")
-  doctorId       String   @map("doctor_id")
-  patientId      String   @map("patient_id")
+  id             String       @id @default(cuid())
+  consultationId String       @map("consultation_id")
+  doctorId       String       @map("doctor_id")
+  patientId      String       @map("patient_id")
   medications    Json // Array of {drug_name, amount, frequency}
-  createdAt      DateTime @default(now()) @map("created_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
 
   // Relations
   consultation Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)

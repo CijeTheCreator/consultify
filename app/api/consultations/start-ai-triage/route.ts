@@ -20,9 +20,10 @@ export async function POST(request: NextRequest) {
         consultationType: ConsultationType.AI_TRIAGE,
         aiTriageStatus: AITriageStatus.IN_PROGRESS,
       },
-      include: {
-        patient: true,
-      },
+      // Remove this include since we don't have patient relation
+      // include: {
+      //   patient: true,
+      // },
     })
 
     // Add initial AI message

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabaseClient"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   const consultationId = params.id
@@ -7,20 +8,21 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   const userId = searchParams.get("userId")
 
   try {
-    // Get messages with sender info and prescription data
+    // Get messages with prescription data only (no sender relation)
     const messages = await prisma.message.findMany({
       where: { consultationId },
       include: {
-        sender: true,
         prescription: true,
         reads: {
           select: { userId: true },
         },
+        // Remove sender relation since it doesn't exist
+        // sender: true,
       },
       orderBy: { createdAt: "asc" },
     })
 
-    // Get typing indicators
+    // Get typing indicators without user relation
     const typingIndicators = await prisma.typingIndicator.findMany({
       where: {
         consultationId,
@@ -31,29 +33,56 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
           not: userId || undefined,
         },
       },
-      include: {
-        user: {
-          select: { name: true },
-        },
-      },
+      // Remove user relation
+      // include: {
+      //   user: {
+      //     select: { name: true },
+      //   },
+      // },
     })
 
-    // Process messages with read receipts and prescription data
-    const messagesWithReads = messages.map((message) => ({
-      ...message,
-      read_by: message.reads.map((r) => r.userId),
-      prescription_data: message.prescription
-        ? {
-            medications: message.prescription.medications,
+    // Enrich messages with user data from Supabase Auth
+    const enrichedMessages = await Promise.all(
+      messages.map(async (message) => {
+        let senderName = "Unknown User"
+        try {
+          const { data: senderData } = await supabase.auth.admin.getUserById(message.senderId)
+          if (senderData.user) {
+            senderName = senderData.user.user_metadata?.name || "Unknown User"
           }
-        : null,
-    }))
+        } catch (error) {
+          console.error("Failed to fetch sender data:", error)
+        }
 
-    const typingUsers = typingIndicators.map((t) => t.user.name).filter(Boolean)
+        return {
+          ...message,
+          senderName,
+          read_by: message.reads.map((r) => r.userId),
+          prescription_data: message.prescription
+            ? {
+                medications: message.prescription.medications,
+              }
+            : null,
+        }
+      }),
+    )
+
+    // Get typing user names from Supabase Auth
+    const typingUserNames = await Promise.all(
+      typingIndicators.map(async (indicator) => {
+        try {
+          const { data: userData } = await supabase.auth.admin.getUserById(indicator.userId)
+          return userData.user?.user_metadata?.name || "Unknown User"
+        } catch (error) {
+          console.error("Failed to fetch typing user data:", error)
+          return "Unknown User"
+        }
+      }),
+    )
 
     return NextResponse.json({
-      messages: messagesWithReads,
-      typingUsers,
+      messages: enrichedMessages,
+      typingUsers: typingUserNames.filter(Boolean),
     })
   } catch (error) {
     console.error("Database error:", error)
@@ -103,9 +132,10 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
           senderId,
           content,
         },
-        include: {
-          sender: true,
-        },
+        // Remove sender relation
+        // include: {
+        //   sender: true,
+        // },
       })
 
       // Mark as read by sender
@@ -116,7 +146,23 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         },
       })
 
-      return NextResponse.json({ message })
+      // Get sender data from Supabase Auth
+      let senderName = "Unknown User"
+      try {
+        const { data: senderData } = await supabase.auth.admin.getUserById(senderId)
+        if (senderData.user) {
+          senderName = senderData.user.user_metadata?.name || "Unknown User"
+        }
+      } catch (error) {
+        console.error("Failed to fetch sender data:", error)
+      }
+
+      return NextResponse.json({
+        message: {
+          ...message,
+          senderName,
+        },
+      })
     }
 
     return NextResponse.json({ error: "Invalid request type" }, { status: 400 })

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabaseClient"
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const consultationId = params.id
@@ -39,15 +40,28 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         messageType: "PRESCRIPTION",
         prescriptionId: prescription.id,
       },
-      include: {
-        sender: true,
-      },
+      // Remove sender relation
+      // include: {
+      //   sender: true,
+      // },
     })
+
+    // Get doctor data from Supabase Auth
+    let doctorName = "Doctor"
+    try {
+      const { data: doctorData } = await supabase.auth.admin.getUserById(doctorId)
+      if (doctorData.user) {
+        doctorName = doctorData.user.user_metadata?.name || "Doctor"
+      }
+    } catch (error) {
+      console.error("Failed to fetch doctor data:", error)
+    }
 
     return NextResponse.json({
       prescription,
       message: {
         ...message,
+        senderName: doctorName,
         prescription_data: {
           medications: validMedications,
         },
