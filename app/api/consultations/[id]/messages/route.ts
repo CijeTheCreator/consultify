@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { supabase } from "@/lib/supabaseClient"
+import { supabase } from "@/lib/supabase-server"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   const consultationId = params.id
@@ -60,8 +60,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
           read_by: message.reads.map((r) => r.userId),
           prescription_data: message.prescription
             ? {
-                medications: message.prescription.medications,
-              }
+              medications: message.prescription.medications,
+            }
             : null,
         }
       }),

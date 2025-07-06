@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { selectDoctor, extractSymptoms } from "@/lib/doctor-selection"
 import { ConsultationType, AITriageStatus } from "@prisma/client"
+import { supabase } from "@/lib/supabase-server"
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +15,6 @@ export async function POST(request: NextRequest) {
     // Get consultation details
     const consultation = await prisma.consultation.findUnique({
       where: { id: consultationId },
-      // include: { patient: true },
     })
 
     if (!consultation) {
@@ -36,11 +36,6 @@ export async function POST(request: NextRequest) {
         triageSummary: aiSummary,
         urgency: criteria.urgency.toUpperCase() as any,
       },
-      // Remove user relations since they don't exist
-      // include: {
-      //   patient: true,
-      //   doctor: true,
-      // },
     })
 
     // Add triage summary as system message
@@ -53,31 +48,51 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Get doctor data from Supabase Auth
+    let doctorName = "Doctor"
+    let doctorSpecialization = ""
+    try {
+      const { data: doctorData } = await supabase.auth.admin.getUserById(selectedDoctor.id)
+      if (doctorData.user) {
+        doctorName = doctorData.user.user_metadata?.name || "Doctor"
+        doctorSpecialization = doctorData.user.user_metadata?.specialization || ""
+      }
+    } catch (error) {
+      console.error("Failed to fetch doctor data:", error)
+    }
+
     // Add doctor introduction message
     await prisma.message.create({
       data: {
         consultationId,
         senderId: selectedDoctor.id,
-        content: `Hello! I'm Dr. ${selectedDoctor.name}. I've reviewed your symptoms and I'm here to help. How are you feeling right now?`,
+        content: `Hello! I'm Dr. ${doctorName}. I've reviewed your symptoms and I'm here to help. How are you feeling right now?`,
         messageType: "DOCTOR_INTRO",
       },
     })
 
-    // Get user data from Supabase Auth instead
-    const { data: patientData } = await supabase.auth.admin.getUserById(consultation.patientId)
-    const patientName = patientData.user?.user_metadata?.name || "Patient"
+    // Get patient data from Supabase Auth
+    let patientName = "Patient"
+    try {
+      const { data: patientData } = await supabase.auth.admin.getUserById(consultation.patientId)
+      if (patientData.user) {
+        patientName = patientData.user.user_metadata?.name || "Patient"
+      }
+    } catch (error) {
+      console.error("Failed to fetch patient data:", error)
+    }
 
     return NextResponse.json({
       consultation: {
         ...updatedConsultation,
         patientName,
-        doctorName: selectedDoctor.user_metadata?.name || "Doctor",
-        doctorSpecialization: selectedDoctor.user_metadata?.specialization || "",
+        doctorName,
+        doctorSpecialization,
       },
       doctor: {
         id: selectedDoctor.id,
-        name: selectedDoctor.user_metadata?.name || "Doctor",
-        specialization: selectedDoctor.user_metadata?.specialization || "",
+        name: doctorName,
+        specialization: doctorSpecialization,
       },
     })
   } catch (error) {

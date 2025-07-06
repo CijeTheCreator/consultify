@@ -16,8 +16,6 @@ export async function selectDoctor(criteria: DoctorSelectionCriteria) {
       throw new Error("No doctors available")
     }
 
-    // For now, select a random doctor
-    // TODO: Implement intelligent matching based on symptoms and specialization
     const randomIndex = Math.floor(Math.random() * doctors.length)
     const selectedDoctor = doctors[randomIndex]
 
