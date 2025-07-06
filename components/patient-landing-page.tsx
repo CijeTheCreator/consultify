@@ -85,29 +85,29 @@ export default function PatientLandingPage({
     }
   }
 
-  const colors = ["#0A400C", "#819067", "#B1AB86", "#FEFAE0"]
+  const colors = ["#2EFF5D", "#A9FF9C", "#FFF6B0", "#FFFFFF"];
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#FEFAE0" }}>
-      <Pointer />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden text-white" style={{ backgroundColor: "#0A400C" }}>
         <InteractiveGridPattern
           className="absolute inset-0 opacity-20"
-          width={40}
-          height={40}
+          width={80}
+          height={80}
           squares={[24, 24]}
           squaresClassName="fill-white/10"
         />
         <div className="relative max-w-7xl mx-auto px-4 py-16 sm:py-24">
           <div className="text-center">
-            <div className="mb-6">
+            <div className="mb-6 text-3xl sm:text-5xl font-bold mb-4 leading-tight">
+              Welcome,
               <AuroraText
-                className="text-3xl sm:text-5xl font-bold mb-4 leading-tight"
+                className="ml-4 text-3xl sm:text-5xl font-bold mb-4 leading-tight"
                 colors={colors}
               >
-                Welcome Back, {user.name}
+                {" "} {user.name}
               </AuroraText>
             </div>
             <p className="text-lg sm:text-xl mb-8 max-w-2xl mx-auto leading-relaxed opacity-90 font-medium">

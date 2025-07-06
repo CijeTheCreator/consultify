@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { ChevronDown, Github, Heart } from "lucide-react"
+import { ChevronDown, Github } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import Image from "next/image"
 import type { User } from "@/lib/types"
 
 interface NavbarProps {
@@ -73,11 +74,15 @@ export default function Navbar({ user, onSignOut }: NavbarProps) {
               {/* Left side - Logo, Separator, Language Selector */}
               <div className="flex items-center space-x-4">
                 {/* Logo */}
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-olive-green rounded-lg flex items-center justify-center">
-                    <Heart className="w-5 h-5 text-cream" />
-                  </div>
-                  <span className="text-xl font-bold text-cream">TeleMed</span>
+                <div className="flex items-center">
+                  <Image
+                    src="/consultify-logo.svg"
+                    alt="Consultify"
+                    width={140}
+                    height={32}
+                    className="h-8 w-auto"
+                    priority
+                  />
                 </div>
 
                 {/* Separator */}
