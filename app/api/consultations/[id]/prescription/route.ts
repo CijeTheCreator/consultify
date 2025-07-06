@@ -61,8 +61,11 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       },
     })
 
-    // Get doctor data from Supabase Auth
+    // Get doctor and patient data from Supabase Auth
     let doctorName = "Doctor"
+    let patientName = "Patient"
+    let patientEmail = ""
+
     try {
       const { data: doctorData } = await supabase.auth.admin.getUserById(doctorId)
       if (doctorData.user) {
@@ -70,6 +73,48 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       }
     } catch (error) {
       console.error("Failed to fetch doctor data:", error)
+    }
+
+    try {
+      const { data: patientData } = await supabase.auth.admin.getUserById(patientId)
+      if (patientData.user) {
+        patientName = patientData.user.user_metadata?.name || "Patient"
+        patientEmail = patientData.user.email || ""
+      }
+    } catch (error) {
+      console.error("Failed to fetch patient data:", error)
+    }
+
+    // Send prescription email to patient (fire and forget - don't block response)
+    if (patientEmail) {
+      // Use setImmediate or setTimeout to ensure this runs after the response is sent
+      setImmediate(async () => {
+        try {
+          const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/send-prescription`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: patientEmail,
+              medications: validMedications,
+              doctorName,
+              patientName,
+              timestamp: new Date().toISOString(),
+            }),
+          })
+
+          if (!emailResponse.ok) {
+            console.error("Failed to send prescription email:", await emailResponse.text())
+          } else {
+            console.log("Prescription email sent successfully to:", patientEmail)
+          }
+        } catch (error) {
+          console.error("Error sending prescription email:", error)
+        }
+      })
+    } else {
+      console.warn("No patient email found - prescription email not sent")
     }
 
     return NextResponse.json({
