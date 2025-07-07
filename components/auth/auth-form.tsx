@@ -46,7 +46,7 @@ export default function AuthForm({ onAuthSuccess }: AuthFormProps) {
           <CardTitle className="text-2xl font-bold text-forest-green">
             {isSignUp ? "Create Account" : "Welcome Back"}
           </CardTitle>
-          <p className="text-sage-green font-medium">{isSignUp ? "Join TeleMed today" : "Sign in to your account"}</p>
+          <p className="text-sage-green font-medium">{isSignUp ? "Join Consultify today" : "Sign in to your account"}</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

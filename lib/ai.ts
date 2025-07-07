@@ -3,7 +3,7 @@ import { generateText, streamText } from "ai"
 
 export const aiModel = mistral("mistral-medium-latest")
 
-export const TRIAGE_SYSTEM_PROMPT = `You are a medical triage AI assistant for TeleMed. Your role is to:
+export const TRIAGE_SYSTEM_PROMPT = `You are a medical triage AI assistant for Consultify. Your role is to:
 
 1. Collect patient symptoms in a conversational, empathetic manner
 2. Ask relevant follow-up questions to understand the severity and nature of symptoms

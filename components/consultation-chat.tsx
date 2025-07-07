@@ -292,6 +292,7 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
                     doctorName={getSenderName(message)}
                     patientName={isCurrentUserMessage(message) ? otherParticipant?.name || "Patient" : currentUser.name}
                     timestamp={message.createdAt}
+                    language={currentUser.role === "doctor" ? "en" : "fr"}
                   />
                 </div>
               ) : (

@@ -33,7 +33,7 @@ export default function UserTypeSelection({ onNext }: UserTypeSelectionProps) {
         transition={{ delay: 0.2 }}
         className="text-center mb-12"
       >
-        <h1 className="text-4xl font-bold text-forest-green mb-4">How would you like to use TeleMed?</h1>
+        <h1 className="text-4xl font-bold text-forest-green mb-4">How would you like to use Consultify?</h1>
         <p className="text-xl text-sage-green font-medium">Choose your role to get started</p>
       </motion.div>
 
@@ -44,9 +44,8 @@ export default function UserTypeSelection({ onNext }: UserTypeSelectionProps) {
         className="grid md:grid-cols-2 gap-6 w-full max-w-2xl mb-8"
       >
         <Card
-          className={`cursor-pointer transition-all hover:shadow-lg border-sage-green/20 ${
-            selectedType === "doctor" ? "ring-2 ring-forest-green bg-forest-green/5" : ""
-          }`}
+          className={`cursor-pointer transition-all hover:shadow-lg border-sage-green/20 ${selectedType === "doctor" ? "ring-2 ring-forest-green bg-forest-green/5" : ""
+            }`}
           onClick={() => setSelectedType("doctor")}
         >
           <CardContent className="p-8 text-center">
@@ -61,9 +60,8 @@ export default function UserTypeSelection({ onNext }: UserTypeSelectionProps) {
         </Card>
 
         <Card
-          className={`cursor-pointer transition-all hover:shadow-lg border-sage-green/20 ${
-            selectedType === "patient" ? "ring-2 ring-forest-green bg-forest-green/5" : ""
-          }`}
+          className={`cursor-pointer transition-all hover:shadow-lg border-sage-green/20 ${selectedType === "patient" ? "ring-2 ring-forest-green bg-forest-green/5" : ""
+            }`}
           onClick={() => setSelectedType("patient")}
         >
           <CardContent className="p-8 text-center">

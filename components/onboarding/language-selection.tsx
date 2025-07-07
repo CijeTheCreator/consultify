@@ -54,7 +54,7 @@ export default function LanguageSelection({ onNext }: LanguageSelectionProps) {
           transition={{ delay: 0.5 }}
           className="text-xl text-sage-green mb-8 font-semibold"
         >
-          Welcome to TeleMed
+          Welcome to Consultify
         </motion.p>
       </div>
 
@@ -69,11 +69,10 @@ export default function LanguageSelection({ onNext }: LanguageSelectionProps) {
             <motion.button
               key={language.code}
               onClick={() => setSelectedLanguage(language.code)}
-              className={`p-3 rounded-lg border-2 transition-all font-medium ${
-                selectedLanguage === language.code
+              className={`p-3 rounded-lg border-2 transition-all font-medium ${selectedLanguage === language.code
                   ? "border-forest-green bg-forest-green/10 text-forest-green"
                   : "border-sage-green/30 bg-white text-sage-green hover:border-sage-green"
-              }`}
+                }`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
