@@ -7,6 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model TranslationCache {
+  id             String   @id @default(cuid())
+  text           String
+  sourceLanguage String
+  targetLanguage String
+  translatedText String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Composite unique constraint to prevent duplicate translations
+  @@unique([text, sourceLanguage, targetLanguage])
+  @@map("translation_cache")
+}
+
 model Consultation {
   id               String             @id @default(cuid())
   patientId        String             @map("patient_id")
