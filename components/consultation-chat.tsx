@@ -69,6 +69,7 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
   // Translation state
   const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({})
   const [translatingMessages, setTranslatingMessages] = useState<Set<string>>(new Set())
+  const [processedMessages, setProcessedMessages] = useState<Set<string>>(new Set()) // Track processed messages
 
   // Get translations based on user role
   const t = currentUser.role === "doctor" ? translations.en : translations.fr
@@ -115,19 +116,23 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
     }
   }
 
-  // Process messages for translation
+  // Process messages for translation - FIXED VERSION
   const processMessagesForTranslation = (messages: any[]) => {
     messages.forEach(message => {
-      // Skip if it's the current user's message or already translated/translating
-      if (message.senderId === currentUser.id ||
-        translatedMessages[message.id] ||
-        translatingMessages.has(message.id) ||
+      // Skip if already processed or if it's the current user's message
+      if (processedMessages.has(message.id) ||
+        message.senderId === currentUser.id ||
         message.messageType === "PRESCRIPTION") {
         return
       }
 
-      // Translate the message
-      translateMessage(message.id, message.content, otherUserLanguage, currentUserLanguage)
+      // Mark as processed immediately to prevent re-processing
+      setProcessedMessages(prev => new Set(prev).add(message.id))
+
+      // Only translate if not already translated/translating
+      if (!translatedMessages[message.id] && !translatingMessages.has(message.id)) {
+        translateMessage(message.id, message.content, otherUserLanguage, currentUserLanguage)
+      }
     })
   }
 
@@ -136,12 +141,20 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
     try {
       const response = await fetch(`/api/consultations/${consultationId}/messages?userId=${currentUser.id}`)
       const data = await response.json()
-      setMessages(data.messages || [])
+
+      // Only update messages if they actually changed to prevent unnecessary re-renders
+      const newMessages = data.messages || []
+      if (JSON.stringify(newMessages) !== JSON.stringify(messages)) {
+        setMessages(newMessages)
+        // Only process new messages for translation
+        processMessagesForTranslation(newMessages)
+      }
+
       setTypingUsers(data.typingUsers || [])
 
       // Set other participant from first message that's not from current user
-      if (data.messages?.length > 0 && !otherParticipant) {
-        const otherUserMessage = data.messages.find((m: any) => m.senderId !== currentUser.id)
+      if (newMessages.length > 0 && !otherParticipant) {
+        const otherUserMessage = newMessages.find((m: any) => m.senderId !== currentUser.id)
         if (otherUserMessage?.senderName) {
           setOtherParticipant({
             id: otherUserMessage.senderId,
@@ -150,9 +163,6 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
           })
         }
       }
-
-      // Process messages for translation
-      processMessagesForTranslation(data.messages || [])
     } catch (error) {
       console.error(t.failedToFetch, error)
     }
@@ -285,7 +295,7 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
   // Polling for real-time updates
   useEffect(() => {
     fetchMessages()
-    const interval = setInterval(fetchMessages, 2000)
+    const interval = setInterval(fetchMessages, 5000)
     return () => clearInterval(interval)
   }, [consultationId])
 
