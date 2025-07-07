@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { MessageCircle, Calendar, Clock, Shield, Heart, Zap, Languages, Bot, UserIcon } from "lucide-react"
+import { MessageCircle, Calendar, Clock, Shield, Heart, Zap, Languages, Bot, User } from "lucide-react"
 import { AuroraText } from "@/components/magicui/aurora-text"
 import { InteractiveGridPattern } from "@/components/magicui/interactive-grid-pattern"
 import { RainbowButton } from "@/components/magicui/rainbow-button"
@@ -38,9 +38,9 @@ interface UserStats {
 }
 
 export default function PatientLandingPage({
-  user = { id: "1", name: "Sarah", language: "en" },
-  onStartConsultation = () => console.log("Start consultation"),
-  onViewConsultations = () => console.log("View consultations"),
+  user = { id: "1", name: "Sarah", language: "fr" },
+  onStartConsultation = () => console.log("Commencer consultation"),
+  onViewConsultations = () => console.log("Voir consultations"),
 }: PatientLandingPageProps) {
   const [stats, setStats] = useState<UserStats>({
     consultations: 12,
@@ -48,15 +48,15 @@ export default function PatientLandingPage({
     recentConsultations: [
       {
         id: "1",
-        title: "General Check-up",
-        status: "Completed",
+        title: "Examen général",
+        status: "Terminé",
         createdAt: "2025-01-15T10:30:00Z",
         consultationType: "DOCTOR"
       },
       {
         id: "2",
-        title: "Symptom Assessment",
-        status: "Active",
+        title: "Évaluation des symptômes",
+        status: "Actif",
         createdAt: "2025-01-10T14:20:00Z",
         consultationType: "AI_TRIAGE"
       }
@@ -68,17 +68,17 @@ export default function PatientLandingPage({
     return consultationType === "AI_TRIAGE" ? (
       <Bot className="w-4 h-4 text-blue-600" />
     ) : (
-      <UserIcon className="w-4 h-4 text-green-600" />
+      <User className="w-4 h-4 text-green-600" />
     )
   }
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "active":
+      case "actif":
         return "bg-green-100 text-green-800"
-      case "completed":
+      case "terminé":
         return "bg-blue-100 text-blue-800"
-      case "cancelled":
+      case "annulé":
         return "bg-red-100 text-red-800"
       default:
         return "bg-gray-100 text-gray-800"
@@ -90,7 +90,7 @@ export default function PatientLandingPage({
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#FEFAE0" }}>
 
-      {/* Hero Section */}
+      {/* Section Héro */}
       <section className="relative overflow-hidden text-white" style={{ backgroundColor: "#0A400C" }}>
         <InteractiveGridPattern
           className="absolute inset-0 opacity-20"
@@ -102,7 +102,7 @@ export default function PatientLandingPage({
         <div className="relative max-w-7xl mx-auto px-4 py-16 sm:py-24">
           <div className="text-center">
             <div className="mb-6 text-3xl sm:text-5xl font-bold mb-4 leading-tight">
-              Welcome,
+              Bienvenue,
               <AuroraText
                 className="ml-4 text-3xl sm:text-5xl font-bold mb-4 leading-tight"
                 colors={colors}
@@ -111,8 +111,7 @@ export default function PatientLandingPage({
               </AuroraText>
             </div>
             <p className="text-lg sm:text-xl mb-8 max-w-2xl mx-auto leading-relaxed opacity-90 font-medium">
-              Ready to connect with a doctor? Tell us what's bothering you today, and we'll find the perfect specialist
-              who speaks your language.
+              Prêt à consulter un médecin ? Décrivez-nous ce qui vous préoccupe aujourd'hui, et nous trouverons le spécialiste parfait qui parle votre langue.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <RainbowButton
@@ -121,7 +120,7 @@ export default function PatientLandingPage({
                 onClick={onStartConsultation}
               >
                 <MessageCircle className="mr-2 w-5 h-5" />
-                Start a Consultation
+                Commencer une consultation
               </RainbowButton>
               <RainbowButton
                 size="lg"
@@ -130,23 +129,23 @@ export default function PatientLandingPage({
                 onClick={onViewConsultations}
               >
                 <Calendar className="mr-2 w-5 h-5" />
-                Previous Consultations
+                Consultations précédentes
               </RainbowButton>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Recent Activity Section */}
+      {/* Section Activité récente */}
       <section className="py-16" style={{ backgroundColor: "#FEFAE0" }}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4" style={{ color: "#0A400C" }}>Continue Your Healthcare Journey</h2>
-            <p className="text-lg font-medium" style={{ color: "#819067" }}>Pick up where you left off, {user.name}</p>
+            <h2 className="text-3xl font-bold mb-4" style={{ color: "#0A400C" }}>Poursuivez votre parcours santé</h2>
+            <p className="text-lg font-medium" style={{ color: "#819067" }}>Reprenez là où vous vous étiez arrêté, {user.name}</p>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* Recent Consultations */}
+            {/* Consultations récentes */}
             <Card className="lg:col-span-2 relative overflow-hidden" style={{ borderColor: "#819067" }}>
               <BorderBeam
                 colorFrom="#819067"
@@ -157,20 +156,20 @@ export default function PatientLandingPage({
               <CardHeader>
                 <CardTitle className="flex items-center" style={{ color: "#0A400C" }}>
                   <Clock className="w-5 h-5 mr-2" style={{ color: "#819067" }} />
-                  Recent Consultations
+                  Consultations récentes
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" style={{ borderColor: "#0A400C" }}></div>
-                    <p style={{ color: "#819067" }}>Loading consultations...</p>
+                    <p style={{ color: "#819067" }}>Chargement des consultations...</p>
                   </div>
                 ) : stats.recentConsultations.length === 0 ? (
                   <div className="text-center py-8">
                     <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="font-medium" style={{ color: "#819067" }}>No consultations yet</p>
-                    <p className="text-sm text-gray-500">Start your first consultation to get personalized care</p>
+                    <p className="font-medium" style={{ color: "#819067" }}>Aucune consultation pour le moment</p>
+                    <p className="text-sm text-gray-500">Commencez votre première consultation pour obtenir des soins personnalisés</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -191,14 +190,14 @@ export default function PatientLandingPage({
                             <p className="font-semibold" style={{ color: "#0A400C" }}>{consultation.title}</p>
                             <p className="text-sm font-medium" style={{ color: "#819067" }}>
                               {consultation.consultationType === "AI_TRIAGE"
-                                ? "AI Health Assistant"
-                                : "Doctor Consultation"}
+                                ? "Assistant santé IA"
+                                : "Consultation médicale"}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-medium" style={{ color: "#819067" }}>
-                            {new Date(consultation.createdAt).toLocaleDateString()}
+                            {new Date(consultation.createdAt).toLocaleDateString("fr-FR")}
                           </p>
                           <Badge className={getStatusColor(consultation.status)}>{consultation.status}</Badge>
                         </div>
@@ -209,7 +208,7 @@ export default function PatientLandingPage({
               </CardContent>
             </Card>
 
-            {/* User Preferences */}
+            {/* Préférences utilisateur */}
             <Card className="relative overflow-hidden" style={{ borderColor: "#819067" }}>
               <BorderBeam
                 colorFrom="#B1AB86"
@@ -220,26 +219,26 @@ export default function PatientLandingPage({
               <CardHeader>
                 <CardTitle className="flex items-center" style={{ color: "#0A400C" }}>
                   <Languages className="w-5 h-5 mr-2" style={{ color: "#819067" }} />
-                  Your Preferences
+                  Vos préférences
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm font-semibold mb-1" style={{ color: "#0A400C" }}>Language Preference</p>
+                  <p className="text-sm font-semibold mb-1" style={{ color: "#0A400C" }}>Langue préférée</p>
                   <Badge style={{ backgroundColor: "#819067", color: "#FEFAE0" }}>
-                    {user.language === "en" ? "English" : user.language}
+                    {user.language === "fr" ? "Français" : user.language}
                   </Badge>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold mb-1" style={{ color: "#0A400C" }}>Account Type</p>
+                  <p className="text-sm font-semibold mb-1" style={{ color: "#0A400C" }}>Type de compte</p>
                   <Badge style={{ backgroundColor: "#0A400C", color: "#FEFAE0" }}>Patient</Badge>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold mb-1" style={{ color: "#0A400C" }}>Available Services</p>
+                  <p className="text-sm font-semibold mb-1" style={{ color: "#0A400C" }}>Services disponibles</p>
                   <div className="space-y-2">
-                    <div className="text-sm font-medium" style={{ color: "#819067" }}>• AI Health Triage</div>
-                    <div className="text-sm font-medium" style={{ color: "#819067" }}>• Doctor Consultations</div>
-                    <div className="text-sm font-medium" style={{ color: "#819067" }}>• Prescription Management</div>
+                    <div className="text-sm font-medium" style={{ color: "#819067" }}>• Triage santé IA</div>
+                    <div className="text-sm font-medium" style={{ color: "#819067" }}>• Consultations médicales</div>
+                    <div className="text-sm font-medium" style={{ color: "#819067" }}>• Gestion des ordonnances</div>
                   </div>
                 </div>
               </CardContent>
@@ -248,13 +247,13 @@ export default function PatientLandingPage({
         </div>
       </section>
 
-      {/* Quick Access Section */}
+      {/* Section Accès rapide */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4" style={{ color: "#0A400C" }}>Fast Track to Care, {user.name}</h2>
+            <h2 className="text-3xl font-bold mb-4" style={{ color: "#0A400C" }}>Accès rapide aux soins, {user.name}</h2>
             <p className="text-lg font-medium" style={{ color: "#819067" }}>
-              Skip the wait – connect with specialists who understand your needs
+              Évitez l'attente – connectez-vous avec des spécialistes qui comprennent vos besoins
             </p>
           </div>
 
@@ -274,8 +273,8 @@ export default function PatientLandingPage({
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:opacity-80 transition-colors" style={{ backgroundColor: "#0A400C" }}>
                   <Zap className="w-8 h-8" style={{ color: "#FEFAE0" }} />
                 </div>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: "#0A400C" }}>Instant Consultation</h3>
-                <p className="text-sm font-medium" style={{ color: "#819067" }}>Start talking to our AI agent about new symptoms</p>
+                <h3 className="text-lg font-semibold mb-2" style={{ color: "#0A400C" }}>Consultation instantanée</h3>
+                <p className="text-sm font-medium" style={{ color: "#819067" }}>Commencez à parler à notre agent IA de nouveaux symptômes</p>
               </CardContent>
             </Card>
 
@@ -290,8 +289,8 @@ export default function PatientLandingPage({
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:opacity-80 transition-colors" style={{ backgroundColor: "#819067" }}>
                   <Heart className="w-8 h-8" style={{ color: "#FEFAE0" }} />
                 </div>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: "#0A400C" }}>Health Tracking</h3>
-                <p className="text-sm font-medium" style={{ color: "#819067" }}>Monitor your symptoms and treatment progress</p>
+                <h3 className="text-lg font-semibold mb-2" style={{ color: "#0A400C" }}>Suivi santé</h3>
+                <p className="text-sm font-medium" style={{ color: "#819067" }}>Surveillez vos symptômes et les progrès du traitement</p>
               </CardContent>
             </Card>
 
@@ -310,8 +309,8 @@ export default function PatientLandingPage({
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:opacity-80 transition-colors" style={{ backgroundColor: "#B1AB86" }}>
                   <Calendar className="w-8 h-8" style={{ color: "#0A400C" }} />
                 </div>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: "#0A400C" }}>Consultation History</h3>
-                <p className="text-sm font-medium" style={{ color: "#819067" }}>Review your past consultations and treatments</p>
+                <h3 className="text-lg font-semibold mb-2" style={{ color: "#0A400C" }}>Historique des consultations</h3>
+                <p className="text-sm font-medium" style={{ color: "#819067" }}>Consultez vos consultations et traitements passés</p>
               </CardContent>
             </Card>
 
@@ -326,23 +325,23 @@ export default function PatientLandingPage({
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:opacity-80 transition-colors" style={{ backgroundColor: "#0A400C" }}>
                   <Shield className="w-8 h-8" style={{ color: "#FEFAE0" }} />
                 </div>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: "#0A400C" }}>Emergency Support</h3>
-                <p className="text-sm font-medium" style={{ color: "#819067" }}>24/7 access to urgent care specialists</p>
+                <h3 className="text-lg font-semibold mb-2" style={{ color: "#0A400C" }}>Assistance d'urgence</h3>
+                <p className="text-sm font-medium" style={{ color: "#819067" }}>Accès 24h/24 aux spécialistes des soins urgents</p>
               </CardContent>
             </Card>
           </div>
         </div>
       </section>
 
-      {/* Stats Dashboard */}
+      {/* Tableau de bord statistiques */}
       <section className="py-16" style={{ backgroundColor: "#FEFAE0" }}>
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4" style={{ color: "#0A400C" }}>Your Health Hub, {user.name}</h2>
+          <h2 className="text-3xl font-bold mb-4" style={{ color: "#0A400C" }}>Votre centre santé, {user.name}</h2>
           <p className="text-lg mb-8 font-medium" style={{ color: "#819067" }}>
-            Everything you need for personalized healthcare in your preferred language
+            Tout ce dont vous avez besoin pour des soins personnalisés dans votre langue préférée
           </p>
 
-          {/* Stats */}
+          {/* Statistiques */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
             <Card className="relative overflow-hidden" style={{ borderColor: "#819067" }}>
               <BorderBeam
@@ -355,7 +354,7 @@ export default function PatientLandingPage({
                 <div className="text-3xl font-bold mb-2" style={{ color: "#0A400C" }}>
                   <NumberTicker value={stats.consultations} />
                 </div>
-                <div className="text-sm font-medium" style={{ color: "#819067" }}>Total Consultations</div>
+                <div className="text-sm font-medium" style={{ color: "#819067" }}>Total consultations</div>
               </CardContent>
             </Card>
             <Card className="relative overflow-hidden" style={{ borderColor: "#819067" }}>
@@ -369,7 +368,7 @@ export default function PatientLandingPage({
                 <div className="text-3xl font-bold mb-2" style={{ color: "#819067" }}>
                   <NumberTicker value={stats.messages} />
                 </div>
-                <div className="text-sm font-medium" style={{ color: "#819067" }}>Messages Sent</div>
+                <div className="text-sm font-medium" style={{ color: "#819067" }}>Messages envoyés</div>
               </CardContent>
             </Card>
             <Card className="relative overflow-hidden" style={{ borderColor: "#819067" }}>
@@ -381,7 +380,7 @@ export default function PatientLandingPage({
               />
               <CardContent className="text-center p-6">
                 <div className="text-3xl font-bold mb-2" style={{ color: "#B1AB86" }}>24/7</div>
-                <div className="text-sm font-medium" style={{ color: "#819067" }}>Support Available</div>
+                <div className="text-sm font-medium" style={{ color: "#819067" }}>Assistance disponible</div>
               </CardContent>
             </Card>
             <Card className="relative overflow-hidden" style={{ borderColor: "#819067" }}>
@@ -395,12 +394,12 @@ export default function PatientLandingPage({
                 <div className="text-3xl font-bold mb-2" style={{ color: "#0A400C" }}>
                   <NumberTicker value={100} />+
                 </div>
-                <div className="text-sm font-medium" style={{ color: "#819067" }}>Doctors Available</div>
+                <div className="text-sm font-medium" style={{ color: "#819067" }}>Médecins disponibles</div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Primary Actions */}
+          {/* Actions principales */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <RainbowButton
               size="lg"
@@ -408,7 +407,7 @@ export default function PatientLandingPage({
               onClick={onStartConsultation}
             >
               <MessageCircle className="mr-2 w-5 h-5" />
-              Start New Consultation
+              Nouvelle consultation
             </RainbowButton>
             <RainbowButton
               size="lg"
@@ -417,7 +416,7 @@ export default function PatientLandingPage({
               onClick={onViewConsultations}
             >
               <Calendar className="mr-2 w-5 h-5" />
-              View All Consultations
+              Voir toutes les consultations
             </RainbowButton>
           </div>
         </div>

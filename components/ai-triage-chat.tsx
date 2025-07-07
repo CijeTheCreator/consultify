@@ -28,7 +28,7 @@ export default function AITriageChat({ currentUser, consultationId, onTriageComp
     {
       role: "assistant",
       content:
-        "Hello! I'm your AI health assistant. I'm here to understand your symptoms and connect you with the right doctor. What brings you here today?",
+        "Bonjour ! Je suis votre assistant de santé IA. Je suis là pour comprendre vos symptômes et vous connecter avec le bon médecin. Qu'est-ce qui vous amène aujourd'hui ?",
       timestamp: Date.now(),
     },
   ])
@@ -46,7 +46,7 @@ export default function AITriageChat({ currentUser, consultationId, onTriageComp
     scrollToBottom()
   }, [messages])
 
-  // Create consultation if not provided
+  // Créer une consultation si elle n'est pas fournie
   useEffect(() => {
     if (!currentConsultationId) {
       createAITriageConsultation()
@@ -66,7 +66,7 @@ export default function AITriageChat({ currentUser, consultationId, onTriageComp
         setCurrentConsultationId(data.consultation.id)
       }
     } catch (error) {
-      console.error("Failed to create AI triage consultation:", error)
+      console.error("Échec de la création de la consultation de triage IA:", error)
     }
   }
 
@@ -85,7 +85,7 @@ export default function AITriageChat({ currentUser, consultationId, onTriageComp
     setIsLoading(true)
 
     try {
-      // Prepare messages for AI
+      // Préparer les messages pour l'IA
       const aiMessages = [...messages, userMessage].map((msg) => ({
         role: msg.role,
         content: msg.content,
@@ -108,17 +108,17 @@ export default function AITriageChat({ currentUser, consultationId, onTriageComp
 
         setMessages((prev) => [...prev, aiMessage])
 
-        // Check if triage is complete
+        // Vérifier si le triage est terminé
         if (data.isComplete) {
           setIsComplete(true)
           await completeTriageAndConnectDoctor(data.response)
         }
       }
     } catch (error) {
-      console.error("Failed to get AI response:", error)
+      console.error("Échec d'obtention de la réponse IA:", error)
       const errorMessage: Message = {
         role: "assistant",
-        content: "I'm sorry, I'm having trouble connecting right now. Please try again.",
+        content: "Je suis désolé, j'ai des difficultés de connexion en ce moment. Veuillez réessayer.",
         timestamp: Date.now(),
       }
       setMessages((prev) => [...prev, errorMessage])
@@ -141,22 +141,22 @@ export default function AITriageChat({ currentUser, consultationId, onTriageComp
       const data = await response.json()
 
       if (data.consultation) {
-        // Show connection message
+        // Afficher le message de connexion
         const connectionMessage: Message = {
           role: "assistant",
-          content: `Perfect! Based on your symptoms, I'm connecting you with Dr. ${data.doctor.name}${data.doctor.specialization ? ` (${data.doctor.specialization})` : ""}. They'll be with you shortly to discuss your concerns in detail.`,
+          content: `Parfait ! En fonction de vos symptômes, je vous connecte avec Dr. ${data.doctor.name}${data.doctor.specialization ? ` (${data.doctor.specialization})` : ""}. Il/Elle sera avec vous sous peu pour discuter de vos préoccupations en détail.`,
           timestamp: Date.now(),
         }
 
         setMessages((prev) => [...prev, connectionMessage])
 
-        // Transition to doctor chat after a delay
+        // Transition vers le chat du médecin après un délai
         setTimeout(() => {
           onTriageComplete(data.consultation.id)
         }, 3000)
       }
     } catch (error) {
-      console.error("Failed to complete triage:", error)
+      console.error("Échec de la finalisation du triage:", error)
     }
   }
 
@@ -175,14 +175,14 @@ export default function AITriageChat({ currentUser, consultationId, onTriageComp
                 </AvatarFallback>
               </Avatar>
               <div>
-                <CardTitle className="text-lg">AI Health Assistant</CardTitle>
-                <p className="text-sm text-gray-600">Collecting your symptoms</p>
+                <CardTitle className="text-lg">Assistant de Santé IA</CardTitle>
+                <p className="text-sm text-gray-600">Collecte de vos symptômes</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
               <div className="flex items-center space-x-1">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">Online</span>
+                <span className="text-sm text-gray-600">En ligne</span>
               </div>
             </div>
           </div>
@@ -205,9 +205,8 @@ export default function AITriageChat({ currentUser, consultationId, onTriageComp
                 </Avatar>
 
                 <div
-                  className={`rounded-lg px-3 py-2 ${
-                    message.role === "user" ? "bg-blue-500 text-white" : "bg-white border text-gray-900"
-                  }`}
+                  className={`rounded-lg px-3 py-2 ${message.role === "user" ? "bg-blue-500 text-white" : "bg-white border text-gray-900"
+                    }`}
                 >
                   <p className="text-sm">{message.content}</p>
                   <div className="flex items-center justify-between mt-1">
@@ -223,7 +222,7 @@ export default function AITriageChat({ currentUser, consultationId, onTriageComp
             </div>
           ))}
 
-          {/* Loading indicator */}
+          {/* Indicateur de chargement */}
           {isLoading && (
             <div className="flex justify-start">
               <div className="flex items-center space-x-2">
@@ -258,7 +257,7 @@ export default function AITriageChat({ currentUser, consultationId, onTriageComp
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Describe your symptoms..."
+                placeholder="Décrivez vos symptômes..."
                 className="flex-1"
                 disabled={isLoading}
               />
@@ -268,7 +267,7 @@ export default function AITriageChat({ currentUser, consultationId, onTriageComp
             </form>
           ) : (
             <div className="w-full text-center">
-              <p className="text-gray-600">Connecting you to a doctor...</p>
+              <p className="text-gray-600">Connexion avec un médecin...</p>
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mt-2"></div>
             </div>
           )}

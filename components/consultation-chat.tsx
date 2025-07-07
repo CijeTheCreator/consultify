@@ -20,6 +20,40 @@ interface ConsultationChatProps {
   fromAITriage?: boolean
 }
 
+// Translation object
+const translations = {
+  en: {
+    loading: "Loading...",
+    patient: "patient",
+    doctor: "doctor",
+    connectedViaAI: "Connected via AI Triage",
+    typeMessage: "Type your message...",
+    sendPrescription: "Send Prescription",
+    welcomeMessage: "You've been connected to your doctor. Your symptoms have been reviewed.",
+    failedToFetch: "Failed to fetch messages:",
+    failedToSend: "Failed to send message:",
+    failedToSendTyping: "Failed to send typing indicator:",
+    failedToMarkRead: "Failed to mark message as read:",
+    failedToSendPrescription: "Failed to send prescription:",
+    otherUser: "Other User"
+  },
+  fr: {
+    loading: "Chargement...",
+    patient: "patient",
+    doctor: "médecin",
+    connectedViaAI: "Connecté via Triage IA",
+    typeMessage: "Tapez votre message...",
+    sendPrescription: "Envoyer l'ordonnance",
+    welcomeMessage: "Vous avez été connecté à votre médecin. Vos symptômes ont été examinés.",
+    failedToFetch: "Échec de la récupération des messages:",
+    failedToSend: "Échec de l'envoi du message:",
+    failedToSendTyping: "Échec de l'envoi de l'indicateur de saisie:",
+    failedToMarkRead: "Échec du marquage du message comme lu:",
+    failedToSendPrescription: "Échec de l'envoi de l'ordonnance:",
+    otherUser: "Autre utilisateur"
+  }
+}
+
 export default function ConsultationChat({ consultationId, currentUser, onBack, fromAITriage }: ConsultationChatProps) {
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState("")
@@ -29,6 +63,9 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout>()
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false)
+
+  // Get translations based on user role
+  const t = currentUser.role === "doctor" ? translations.en : translations.fr
 
   // Fetch messages and typing indicators
   const fetchMessages = async () => {
@@ -50,17 +87,17 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
         }
       }
     } catch (error) {
-      console.error("Failed to fetch messages:", error)
+      console.error(t.failedToFetch, error)
     }
   }
 
   useEffect(() => {
     if (fromAITriage && messages.length > 0) {
       // Show a brief welcome message about the transition
-      const welcomeMessage = "You've been connected to your doctor. Your symptoms have been reviewed."
+      const welcomeMessage = t.welcomeMessage
       // This could be shown as a system message or notification
     }
-  }, [fromAITriage, messages])
+  }, [fromAITriage, messages, t.welcomeMessage])
 
   // Send typing indicator
   const sendTypingIndicator = async (isTyping: boolean) => {
@@ -75,7 +112,7 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
         }),
       })
     } catch (error) {
-      console.error("Failed to send typing indicator:", error)
+      console.error(t.failedToSendTyping, error)
     }
   }
 
@@ -91,7 +128,7 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
         }),
       })
     } catch (error) {
-      console.error("Failed to mark message as read:", error)
+      console.error(t.failedToMarkRead, error)
     }
   }
 
@@ -140,7 +177,7 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
       setInput("")
       fetchMessages()
     } catch (error) {
-      console.error("Failed to send message:", error)
+      console.error(t.failedToSend, error)
     }
   }
 
@@ -160,7 +197,7 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
         fetchMessages()
       }
     } catch (error) {
-      console.error("Failed to send prescription:", error)
+      console.error(t.failedToSendPrescription, error)
     }
   }
 
@@ -209,7 +246,7 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
     if (message.senderId === currentUser.id) {
       return currentUser.name
     }
-    return message.senderName || otherParticipant?.name || "Other User"
+    return message.senderName || otherParticipant?.name || t.otherUser
   }
 
   return (
@@ -229,7 +266,7 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
               <div>
                 <CardTitle className="text-lg">
                   {currentUser.role === "patient" ? "Dr. " : ""}
-                  {otherParticipant?.name || "Loading..."}
+                  {otherParticipant?.name || t.loading}
                 </CardTitle>
                 {otherParticipant?.specialization && (
                   <p className="text-sm text-gray-600">{otherParticipant.specialization}</p>
@@ -237,9 +274,9 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <Badge variant="secondary">{currentUser.role}</Badge>
+              <Badge variant="secondary">{t[currentUser.role as keyof typeof t] || currentUser.role}</Badge>
               {fromAITriage && (
-                <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">Connected via AI Triage</div>
+                <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">{t.connectedViaAI}</div>
               )}
             </div>
           </div>
@@ -318,7 +355,7 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
         <CardFooter className="p-4 border-t">
           <div className="flex w-full space-x-2">
             <form onSubmit={sendMessage} className="flex flex-1 space-x-2">
-              <Input value={input} onChange={handleInputChange} placeholder="Type your message..." className="flex-1" />
+              <Input value={input} onChange={handleInputChange} placeholder={t.typeMessage} className="flex-1" />
               <Button type="submit" disabled={!input.trim()}>
                 <Send className="w-4 h-4" />
               </Button>
@@ -332,7 +369,7 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
                 className="whitespace-nowrap"
               >
                 <Pill className="w-4 h-4 mr-2" />
-                Send Prescription
+                {t.sendPrescription}
               </Button>
             )}
           </div>
