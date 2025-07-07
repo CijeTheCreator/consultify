@@ -161,8 +161,8 @@ export default function AITriageChat({ currentUser, consultationId, onTriageComp
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <Card className="w-full max-w-4xl mx-auto h-[calc(100vh-2rem)] flex flex-col">
+    <div className="min-h-screen bg-gray-50 p-4 pt-20">
+      <Card className="w-full max-w-4xl mx-auto h-[calc(100vh-6rem)] flex flex-col">
         <CardHeader className="pb-3 border-b">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
