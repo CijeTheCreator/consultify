@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { ArrowLeft, Check, CheckCheck, Send, Pill } from "lucide-react"
+import { ArrowLeft, Check, CheckCheck, Send, Pill, Languages } from "lucide-react"
 import type { User } from "@/lib/types"
 import PrescriptionModal from "./prescription-modal"
 import PrescriptionCard from "./prescription-card"
@@ -35,7 +35,8 @@ const translations = {
     failedToSendTyping: "Failed to send typing indicator:",
     failedToMarkRead: "Failed to mark message as read:",
     failedToSendPrescription: "Failed to send prescription:",
-    otherUser: "Other User"
+    otherUser: "Other User",
+    translating: "Translating..."
   },
   fr: {
     loading: "Chargement...",
@@ -50,7 +51,8 @@ const translations = {
     failedToSendTyping: "Échec de l'envoi de l'indicateur de saisie:",
     failedToMarkRead: "Échec du marquage du message comme lu:",
     failedToSendPrescription: "Échec de l'envoi de l'ordonnance:",
-    otherUser: "Autre utilisateur"
+    otherUser: "Autre utilisateur",
+    translating: "Traduction..."
   }
 }
 
@@ -64,8 +66,70 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
   const typingTimeoutRef = useRef<NodeJS.Timeout>()
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false)
 
+  // Translation state
+  const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({})
+  const [translatingMessages, setTranslatingMessages] = useState<Set<string>>(new Set())
+
   // Get translations based on user role
   const t = currentUser.role === "doctor" ? translations.en : translations.fr
+
+  // Get user languages
+  const currentUserLanguage = currentUser.role === "doctor" ? "en" : "fr"
+  const otherUserLanguage = currentUser.role === "doctor" ? "fr" : "en"
+
+  // Translation function
+  const translateMessage = async (messageId: string, text: string, sourceLanguage: string, targetLanguage: string) => {
+    if (translatingMessages.has(messageId) || translatedMessages[messageId]) {
+      return
+    }
+
+    setTranslatingMessages(prev => new Set(prev).add(messageId))
+
+    try {
+      const response = await fetch('/api/translate-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text,
+          sourceLanguage,
+          targetLanguage
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.translatedText) {
+        setTranslatedMessages(prev => ({
+          ...prev,
+          [messageId]: data.translatedText
+        }))
+      }
+    } catch (error) {
+      console.error('Translation failed:', error)
+    } finally {
+      setTranslatingMessages(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(messageId)
+        return newSet
+      })
+    }
+  }
+
+  // Process messages for translation
+  const processMessagesForTranslation = (messages: any[]) => {
+    messages.forEach(message => {
+      // Skip if it's the current user's message or already translated/translating
+      if (message.senderId === currentUser.id ||
+        translatedMessages[message.id] ||
+        translatingMessages.has(message.id) ||
+        message.messageType === "PRESCRIPTION") {
+        return
+      }
+
+      // Translate the message
+      translateMessage(message.id, message.content, otherUserLanguage, currentUserLanguage)
+    })
+  }
 
   // Fetch messages and typing indicators
   const fetchMessages = async () => {
@@ -86,6 +150,9 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
           })
         }
       }
+
+      // Process messages for translation
+      processMessagesForTranslation(data.messages || [])
     } catch (error) {
       console.error(t.failedToFetch, error)
     }
@@ -249,6 +316,27 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
     return message.senderName || otherParticipant?.name || t.otherUser
   }
 
+  // Helper function to get message content (translated or original)
+  const getMessageContent = (message: any) => {
+    if (message.senderId === currentUser.id) {
+      // Show original content for current user's messages
+      return message.content
+    }
+
+    // For other user's messages, show translated content if available
+    if (translatedMessages[message.id]) {
+      return translatedMessages[message.id]
+    }
+
+    // If translating, show loading indicator
+    if (translatingMessages.has(message.id)) {
+      return t.translating
+    }
+
+    // Fallback to original content
+    return message.content
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <Card className="w-full max-w-4xl mx-auto h-[calc(100vh-2rem)] flex flex-col">
@@ -278,6 +366,10 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
               {fromAITriage && (
                 <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">{t.connectedViaAI}</div>
               )}
+              <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded flex items-center space-x-1">
+                <Languages className="w-3 h-3" />
+                <span>{currentUserLanguage.toUpperCase()}</span>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -310,7 +402,12 @@ export default function ConsultationChat({ consultationId, currentUser, onBack, 
                     className={`rounded-lg px-3 py-2 ${isCurrentUserMessage(message) ? "bg-blue-500 text-white" : "bg-white border text-gray-900"
                       }`}
                   >
-                    <p className="text-sm">{message.content}</p>
+                    <div className="flex items-start space-x-2">
+                      <p className="text-sm flex-1">{getMessageContent(message)}</p>
+                      {!isCurrentUserMessage(message) && translatedMessages[message.id] && (
+                        <Languages className="w-3 h-3 text-gray-400 flex-shrink-0 mt-0.5" />
+                      )}
+                    </div>
                     <div className="flex items-center justify-between mt-1">
                       <span className="text-xs opacity-70">
                         {new Date(message.createdAt).toLocaleTimeString([], {
